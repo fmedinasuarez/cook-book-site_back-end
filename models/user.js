@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var Recipe = require('./recipe');
 
 var userShema = mongoose.Schema({
     name : {
@@ -18,6 +19,14 @@ var userShema = mongoose.Schema({
         type:String,
         required:true,
     },
+    myRecipes: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Recipe'
+    }],
+    savedRecipes: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Recipe'
+    }],
 });
 
 var User = module.exports = mongoose.model('User',userShema);

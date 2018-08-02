@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 
 var User = require('./models/user');
+var Recipe = require('./models/recipe');
 
 var app = express();
 
@@ -22,6 +23,19 @@ app.get('/', (req, res) => {
     res.send("Hello word!");
 })
 
+function errorHandler(err) {
+    var error = '';
+    if (err.name == 'ValidationError') {
+        for (field in err.errors) {
+            error += err.errors[field].message + ' ';
+            console.log('Error value: ', error);
+        }
+    } else {
+        error =+"Something unexpected happend."
+    }
+    return error;
+}
+
 app.post('/signup', (req, res) => {
     console.log(req.body);
     var name = req.body.name;
@@ -34,11 +48,16 @@ app.post('/signup', (req, res) => {
     user.sureName = sureName;
     user.email = email;
     user.password = password;
+    user.myRecipes = [];
+    user.savedRecipes = [];
 
     user.save((err, result) => {
         if(err) {
-            console.log("User save error!");
-            res.send({success : "User email already exists!", status : 500});
+            var errorMessage = errorHandler(err);
+            if (errorMessage.toString()=="NaN") {
+                errorMessage = "User email already exists."
+            }
+            res.send({success : errorMessage, status : 500});
         }
         else {
             res.send({success : "Successfully added new user!", status : 200});
@@ -54,7 +73,7 @@ app.post('/login', (req, res) => {
 
     User.findOne({email: emailReq}, (err,user) => {
         if(err){
-            res.send({success:"Login error ocurred", status : 500});
+            res.send({success: errorHandler(err), status : 500});
         }
         else if(!user){
             res.send({success:"User not found", status : 500});
@@ -64,6 +83,23 @@ app.post('/login', (req, res) => {
         }
         else {
             res.send({success:"Login successfully", status : 200});
+        }
+    })
+});
+
+app.post('/addrecipe', (req, res) => {
+    console.log(req.body);
+    var recipe = new Recipe();
+    recipe.title = req.body.title;
+    recipe.ingredients = req.body.ingredients;
+    recipe.steps = req.body.steps;
+    
+    recipe.save((err,result) => {
+        if(err){
+            res.send({success: errorHandler(err), status : 500});
+        }
+        else {
+            res.send({success:"Successfully added new recipe", status : 200});
         }
     })
 });
