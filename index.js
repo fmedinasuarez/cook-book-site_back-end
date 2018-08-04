@@ -28,7 +28,6 @@ function errorHandler(err) {
     if (err.name == 'ValidationError') {
         for (field in err.errors) {
             error += err.errors[field].message + ' ';
-            console.log('Error value: ', error);
         }
     } else {
         error =+"Something unexpected happend."
@@ -36,7 +35,7 @@ function errorHandler(err) {
     return error;
 }
 
-app.post('/signup', (req, res) => {
+app.post('/api/signup', (req, res) => {
     console.log(req.body);
     var name = req.body.name;
     var sureName = req.body.sureName;
@@ -66,7 +65,7 @@ app.post('/signup', (req, res) => {
     
 })
 
-app.post('/login', (req, res) => {
+app.post('/api/login', (req, res) => {
     console.log(req.body);
     var emailReq = req.body.email;
     var passwordReq = req.body.password;
@@ -87,22 +86,49 @@ app.post('/login', (req, res) => {
     })
 });
 
-app.post('/addrecipe', (req, res) => {
+app.post('/api/addrecipe', (req, res) => {
     console.log(req.body);
     var recipe = new Recipe();
     recipe.title = req.body.title;
     recipe.ingredients = req.body.ingredients;
     recipe.steps = req.body.steps;
+    recipe.user = req.body.user;
     
     recipe.save((err,result) => {
         if(err){
             res.send({success: errorHandler(err), status : 500});
         }
         else {
-            res.send({success:"Successfully added new recipe", status : 200});
+            User.findOneAndUpdate({email: recipe.user}, {$push: {myRecipes: recipe} }, (err,user) => {
+                if(err){
+                    res.send({success: errorHandler(err), status : 500});
+                }
+                else{
+                    res.send({success:"Successfully added new recipe", status : 200});
+                }
+            })
         }
     })
 });
+
+app.get('/api/myRecipes/:user',(req,res) => {
+    const userEmail = req.params['user'];
+    User.findOne({email: userEmail}, (err,user) => {
+        if(err) {
+            res.send({success: errorHandler(err), status : 500});
+        }
+        else {
+            Recipe.find({'_id':{$in: user.myRecipes}}, (err2,recipes) => {
+                if(err2) {
+                    res.send({success: errorHandler(err2), status : 500});
+                }
+                else {
+                    res.send({myRecipes: recipes, status : 200});
+                }
+            })
+        }
+    })
+})
 
 app.listen(app.get('port'), function(err,res) {
     console.log("Server is running on port " + app.get('port'));

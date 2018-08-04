@@ -17,6 +17,10 @@ var recipeShema = mongoose.Schema({
     steps: {
         type:String,
         required: true,
+    },
+    user: {
+        type:String,
+        required:true,
     }
 })
 
