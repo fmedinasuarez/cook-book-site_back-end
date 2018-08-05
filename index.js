@@ -130,6 +130,21 @@ app.get('/api/myRecipes/:user',(req,res) => {
     })
 })
 
+app.get('/api/recipesByTitle/:title',(req,res) => {
+    const title = req.params['title'];
+    console.log("title recibido: ",title);
+    Recipe.find({'title' :{'$regex' : '.*'+title+'.*', '$options' : 'i'}},(err, recipes) => {
+        if (err) {
+            console.log("Error en find docs con regex");
+            res.send({succes: errorHandler(err), status : 500});
+        }
+        else {
+            console.log("Se enviaron las recipes correctamente");
+            res.send({recipes : recipes, status : 200});
+        }
+    })
+})
+
 app.listen(app.get('port'), function(err,res) {
     console.log("Server is running on port " + app.get('port'));
 });
