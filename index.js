@@ -183,7 +183,6 @@ app.get('/api/savedRecipes/:user',(req,res) => {
 })
 
 app.post('/api/deleteSavedRecipe',(req,res) => {
-    console.log("delete saved recipe");
     const recipe = req.body.recipe;
     const user = req.body.user;
     User.findOneAndUpdate({email: user}, {$pull: {savedRecipes: recipe._id}}, {'new':true}, (err,user) => {
@@ -197,6 +196,20 @@ app.post('/api/deleteSavedRecipe',(req,res) => {
         }
     })
 
+})
+
+app.get('/api/recipeById/:id',(req,res) => {
+    const id = req.params['id'];
+    Recipe.findOne({_id: id}, (err, recipe) => {
+        if(err) {
+            console.log('Recipe error in get recipe by id')
+            res.send({success: errorHandler(err), status : 500});
+        }
+        else {
+            console.log('Recipe by id sent');
+            res.send({recipe: recipe, status : 200});
+        }
+    })
 })
 
 
