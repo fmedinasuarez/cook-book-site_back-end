@@ -191,7 +191,7 @@ app.post('/api/deleteSavedRecipe',(req,res) => {
             res.send({success: errorHandler(err), status : 500});
         }
         else{
-            console.log("Delete successfully");
+            console.log("Delete saved-recipe successfully");
             res.send({success:"Recipe removed from saved recipes successfully", status : 200});
         }
     })
@@ -209,6 +209,39 @@ app.get('/api/recipeById/:id',(req,res) => {
             console.log('Recipe by id sent');
             res.send({recipe: recipe, status : 200});
         }
+    })
+})
+
+app.post('/api/deleteMyRecipe',(req,res) => {
+    const recipe = req.body.recipe;
+    const user = req.body.user;
+    User.findOneAndUpdate({email: user}, {$pull: {myRecipes: recipe._id}}, {'new':true}, (err,user) => {
+        if(err){
+            console.log("Error in delete saved recipe");
+            res.send({success: errorHandler(err), status : 500});
+        }
+        else{
+            console.log("Delete my-recipe successfully");
+            res.send({success:"Recipe removed from saved recipes successfully", status : 200});
+        }
+    })
+
+})
+
+app.put('/api/editRecipe', (req, res) => {
+    const recipe = req.body.recipe;
+    console.log(recipe._id);
+    Recipe.findOneAndUpdate({_id: recipe._id}, {$set: 
+        {title: recipe.title, ingredients: recipe.ingredients, steps: recipe.steps}}, 
+        { 'new': true, 'upsert': false}, (err,r) => {
+            if(err){
+                console.log("Error in edit  recipe");
+                res.send({success: errorHandler(err), status : 500});
+            }
+            else{
+                console.log("Edit recipe successfully");
+                res.send({recipe: r, status : 200});
+            }
     })
 })
 
