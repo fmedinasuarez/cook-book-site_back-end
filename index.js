@@ -245,6 +245,24 @@ app.put('/api/editRecipe', (req, res) => {
     })
 })
 
+var readline = require('readline');
+
+app.post('/api/chat',(req,res) => {
+    const message = req.body.message;
+    const user = req.body.user;
+
+    var rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    rl.question("User: "+user+". Message: "+message+".\n ", 
+        function(answer) {
+            res.send({message: "Operator: "+answer, status: 200});
+            rl.close();
+        }
+    );
+})
+
 
 app.listen(app.get('port'),'0.0.0.0', function(err,res) {
     console.log("Server is running on port " + app.get('port'));
