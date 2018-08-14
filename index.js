@@ -17,7 +17,8 @@ app.use(cors());
 
 app.set('port', process.env.PORT || 3000);
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '1000mb', extended: true}));
+app.use(bodyParser.urlencoded({limit: '1000mb', extended: true}));
 
 app.get('/', (req, res) => {
     res.send("Hello word!");
@@ -37,18 +38,14 @@ function errorHandler(err) {
 
 app.post('/api/signUp', (req, res) => {
     console.log(req.body);
-    var name = req.body.name;
-    var sureName = req.body.sureName;
-    var email = req.body.email;
-    var password = req.body.password;
 
     var user = new User();
-    user.name = name;
-    user.sureName = sureName;
-    user.email = email;
-    user.password = password;
+    user.name = req.body.name;
+    user.sureName = req.body.sureName;
+    user.email = req.body.email;
     user.myRecipes = [];
     user.savedRecipes = [];
+    user.setPassword(req.body.password);
 
     user.save((err, result) => {
         if(err) {
@@ -62,7 +59,6 @@ app.post('/api/signUp', (req, res) => {
             res.send({success : "Successfully added new user", status : 200});
         }
     })
-    
 })
 
 app.post('/api/login', (req, res) => {
@@ -77,7 +73,7 @@ app.post('/api/login', (req, res) => {
         else if(!user){
             res.send({success:"User not found", status : 500});
         }
-        else if(user.password != passwordReq) {
+        else if(!user.validPassword(passwordReq)) {
             res.send({success:"Password is wrong", status : 500});
         }
         else {
@@ -93,7 +89,7 @@ app.post('/api/addRecipe', (req, res) => {
     recipe.ingredients = req.body.ingredients;
     recipe.steps = req.body.steps;
     recipe.user = req.body.user;
-    
+
     recipe.save((err,result) => {
         if(err){
             res.send({success: errorHandler(err), status : 500});

@@ -21,7 +21,7 @@ var recipeShema = mongoose.Schema({
     user: {
         type:String,
         required:true,
-    }
+    },
 })
 
 module.exports = mongoose.model('Recipe',recipeShema);
