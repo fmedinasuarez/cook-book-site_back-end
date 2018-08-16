@@ -82,13 +82,16 @@ app.post('/api/login', (req, res) => {
     })
 });
 
+var fs = require("fs");
+
 app.post('/api/addRecipe', (req, res) => {
-    console.log(req.body);
+    /*console.log(req.body);*/
     var recipe = new Recipe();
     recipe.title = req.body.title;
     recipe.ingredients = req.body.ingredients;
     recipe.steps = req.body.steps;
     recipe.user = req.body.user;
+    recipe.imagesData = req.body.imagesData;
 
     recipe.save((err,result) => {
         if(err){

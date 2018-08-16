@@ -6,12 +6,7 @@ var recipeShema = mongoose.Schema({
         required: true,
     },
     ingredients: {
-        type:[
-            {
-                type: String,
-                required: true
-            }
-        ], 
+        type:[{type: String, required: true}], 
         required:true
     },
     steps: {
@@ -22,6 +17,9 @@ var recipeShema = mongoose.Schema({
         type:String,
         required:true,
     },
+    imagesData: {
+        type: [{type:String}]
+    }
 })
 
 module.exports = mongoose.model('Recipe',recipeShema);
