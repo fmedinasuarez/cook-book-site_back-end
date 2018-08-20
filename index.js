@@ -36,15 +36,15 @@ function errorHandler(err) {
     return error;
 }
 
-app.post('/api/signUp', (req, res) => {
+app.post('/api/signUp/', (req, res) => {
     console.log(req.body);
 
     var user = new User();
     user.name = req.body.name;
     user.sureName = req.body.sureName;
     user.email = req.body.email;
-    user.myRecipes = [];
-    user.savedRecipes = [];
+    user.myRecipes = req.body.myRecipes;
+    user.savedRecipes = req.body.savedRecipes;
     user.setPassword(req.body.password);
 
     user.save((err, result) => {
@@ -53,36 +53,34 @@ app.post('/api/signUp', (req, res) => {
             if (errorMessage.toString()=="NaN") {
                 errorMessage = "User email already exists."
             }
-            res.send({success : errorMessage, status : 500});
+            res.send({data: [], success : errorMessage, status : 500});
         }
         else {
-            res.send({success : "Successfully added new user", status : 200});
+            res.send({data: [], success : "Successfully added new user", status : 200});
         }
     })
 })
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login/', (req, res) => {
     console.log(req.body);
     var emailReq = req.body.email;
     var passwordReq = req.body.password;
 
     User.findOne({email: emailReq}, (err,user) => {
         if(err){
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else if(!user){
-            res.send({success:"User not found", status : 500});
+            res.send({data: [], success:"User not found", status : 500});
         }
         else if(!user.validPassword(passwordReq)) {
-            res.send({success:"Password is wrong", status : 500});
+            res.send({data: [], success:"Password is wrong", status : 500});
         }
         else {
-            res.send({success:"Login successfully", status : 200});
+            res.send({data: [], success:"Login successfully", status : 200});
         }
     })
 });
-
-var fs = require("fs");
 
 app.post('/api/addRecipe', (req, res) => {
     /*console.log(req.body);*/
@@ -95,15 +93,15 @@ app.post('/api/addRecipe', (req, res) => {
 
     recipe.save((err,result) => {
         if(err){
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else {
             User.findOneAndUpdate({email: recipe.user}, {$push: {myRecipes: recipe} }, (err,user) => {
                 if(err){
-                    res.send({success: errorHandler(err), status : 500});
+                    res.send({data: [], success: errorHandler(err), status : 500});
                 }
                 else{
-                    res.send({success:"Successfully added new recipe", status : 200});
+                    res.send({data: [], success:"Successfully added new recipe", status : 200});
                 }
             })
         }
@@ -114,15 +112,16 @@ app.get('/api/myRecipes/:user',(req,res) => {
     const userEmail = req.params['user'];
     User.findOne({email: userEmail}, (err,user) => {
         if(err) {
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else {
             Recipe.find({'_id':{$in: user.myRecipes}}, (err2,recipes) => {
                 if(err2) {
-                    res.send({success: errorHandler(err2), status : 500});
+                    res.send({data: [], success: errorHandler(err2), status : 500});
                 }
                 else {
-                    res.send({myRecipes: recipes, status : 200});
+                    console.log("My recipes were sent correctly");
+                    res.send({data: recipes, success: 'my recipes were sent correctly', status : 200});
                 }
             })
         }
@@ -135,26 +134,26 @@ app.get('/api/recipesByTitle/:title',(req,res) => {
     Recipe.find({'title' :{'$regex' : '.*'+title+'.*', '$options' : 'i'}},(err, recipes) => {
         if (err) {
             console.log("Error in find docs with regex");
-            res.send({succes: errorHandler(err), status : 500});
+            res.send({data: [], succes: errorHandler(err), status : 500});
         }
         else {
             console.log("Recipes were sent correctly");
-            res.send({recipes : recipes, status : 200});
+            res.send({data : recipes, success: 'recipes by title were sent correctly', status : 200});
         }
     })
 })
 
 app.put('/api/saveRecipe', (req, res) => {
-    console.log(req.body);
+    /*console.log(req.body);*/
     const recipe = req.body.recipe;
     const user = req.body.user;
 
     User.findOneAndUpdate({email: user}, {$addToSet: {savedRecipes: recipe} }, (err,user) => {
         if(err){
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else{
-            res.send({success:"Recipe was successfully saved", status : 200});
+            res.send({data: [], success:"Recipe was successfully saved", status : 200});
         }
     })
 })
@@ -170,11 +169,11 @@ app.get('/api/savedRecipes/:user',(req,res) => {
             Recipe.find({'_id':{$in: user.savedRecipes}}, (err2,recipes) => {
                 if(err2) {
                     console.log('Error in get saved recipes finding the recipes');
-                    res.send({success: errorHandler(err2), status : 500});
+                    res.send({data: [], success: errorHandler(err2), status : 500});
                 }
                 else {
                     console.log('Saved recipes sent');
-                    res.send({savedRecipes: recipes, status : 200});
+                    res.send({data: recipes, success: 'Saved recipes were sent correctly', status : 200});
                 }
             })
         }
@@ -187,11 +186,11 @@ app.post('/api/deleteSavedRecipe',(req,res) => {
     User.findOneAndUpdate({email: user}, {$pull: {savedRecipes: recipe._id}}, {'new':true}, (err,user) => {
         if(err){
             console.log("Error in delete saved recipe");
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else{
             console.log("Delete saved-recipe successfully");
-            res.send({success:"Recipe removed from saved recipes successfully", status : 200});
+            res.send({data: [], success:"Recipe removed from saved recipes successfully", status : 200});
         }
     })
 
@@ -202,11 +201,11 @@ app.get('/api/recipeById/:id',(req,res) => {
     Recipe.findOne({_id: id}, (err, recipe) => {
         if(err) {
             console.log('Recipe error in get recipe by id')
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else {
             console.log('Recipe by id sent');
-            res.send({recipe: recipe, status : 200});
+            res.send({data: recipe, success: 'Recipe by idsent correctly', status : 200});
         }
     })
 })
@@ -217,29 +216,29 @@ app.post('/api/deleteMyRecipe',(req,res) => {
     User.findOneAndUpdate({email: user}, {$pull: {myRecipes: recipe._id}}, {'new':true}, (err,user) => {
         if(err){
             console.log("Error in delete saved recipe");
-            res.send({success: errorHandler(err), status : 500});
+            res.send({data: [], success: errorHandler(err), status : 500});
         }
         else{
             console.log("Delete my-recipe successfully");
-            res.send({success:"Recipe removed from saved recipes successfully", status : 200});
+            res.send({data: [], success:"Recipe removed from saved recipes successfully", status : 200});
         }
     })
 
 })
 
 app.put('/api/editRecipe', (req, res) => {
-    const recipe = req.body.recipe;
+    const recipe = req.body._id;
     console.log(recipe._id);
     Recipe.findOneAndUpdate({_id: recipe._id}, {$set: 
         {title: recipe.title, ingredients: recipe.ingredients, steps: recipe.steps}}, 
         { 'new': true, 'upsert': false}, (err,r) => {
             if(err){
                 console.log("Error in edit  recipe");
-                res.send({success: errorHandler(err), status : 500});
+                res.send({data: [], success: errorHandler(err), status : 500});
             }
             else{
                 console.log("Edit recipe successfully");
-                res.send({recipe: r, status : 200});
+                res.send({data: r, success: 'Edit recipe was sent correctly', status : 200});
             }
     })
 })
